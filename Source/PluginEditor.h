@@ -11,8 +11,12 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+const float startAngle = juce::degreesToRadians(180.0f + 45.0f);
+const float endAngle = juce::degreesToRadians(180.f - 45.0f) + juce::MathConstants<float>::twoPi;
+
 struct Spin : public juce::Component, public juce::Timer
 {
+
   double rotation = {0.};
   double speed = 3.141592741F / 4;
 
@@ -26,7 +30,13 @@ struct Spin : public juce::Component, public juce::Timer
   juce::Path path;
 
   KnobDesignAudioProcessor& audioProcessor;
+  KnobDesignAudioProcessorEditor& editor;
+};
 
+struct LookAndFeel : juce::LookAndFeel_V4
+{
+    static void drawRotarySlider(juce::Graphics& g, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider);
+    static juce::String getDisplayString(juce::Slider& slider);
 };
 
 //==============================================================================
@@ -39,11 +49,11 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    juce::Slider testSlider;
 
 private:
     Spin spin;
 
-    juce::Slider testSlider;
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     KnobDesignAudioProcessor& audioProcessor;
