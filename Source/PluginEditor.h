@@ -16,21 +16,22 @@ const float endAngle = juce::degreesToRadians(180.f - 45.0f) + juce::MathConstan
 
 struct Spin : public juce::Component, public juce::Timer
 {
+    double rotation = {0.};
+    double speed = 3.141592741F / 4;
 
-  double rotation = {0.};
-  double speed = 3.141592741F / 4;
+    Spin(KnobDesignAudioProcessor&);
+    ~Spin();
 
-  Spin(KnobDesignAudioProcessor&);
-  ~Spin();
+    void timerCallback() override;
+    void paint(juce::Graphics&) override;
+    void resized() override;
+    //void sliderValueChanged(juce::Slider&) override;
 
-  void timerCallback() override;
-  void paint(juce::Graphics&) override;
-  void resized() override;
+    juce::Path path;
 
-  juce::Path path;
+    KnobDesignAudioProcessor& audioProcessor;
 
-  KnobDesignAudioProcessor& audioProcessor;
-  KnobDesignAudioProcessorEditor& editor;
+    juce::Rectangle<float> bounds = {100, 100, 150, 150};
 };
 
 struct LookAndFeel : juce::LookAndFeel_V4

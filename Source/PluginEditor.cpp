@@ -9,9 +9,9 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-Spin::Spin(KnobDesignAudioProcessor& p) : audioProcessor(p), editor(&p)
+Spin::Spin(KnobDesignAudioProcessor& p) : audioProcessor(p)
 {
-  startTimerHz(60);
+  startTimerHz(30);
 }
 
 Spin::~Spin()
@@ -27,12 +27,24 @@ void Spin::timerCallback()
 
 void Spin::paint(juce::Graphics& g)
 {
-  g.fillPath(path);
+    g.setColour(juce::Colours::white);
+
+    path.addRoundedRectangle(bounds.reduced(40.0f), 6.0f);
+
+    auto transform = juce::AffineTransform().rotated(juce::degreesToRadians(rotation * 10.0f),
+        bounds.reduced(60.0f).getCentreX(), bounds.reduced(60.0f).getCentreY());
+
+    auto strokeType = juce::PathStrokeType(1.0f);
+
+    path.applyTransform(transform);
+
+    g.fillPath(path);
+    path.clear();
 }
 
 void Spin::resized()
 {
-  path.addRoundedRectangle(audioProcessor.activeEditor.getBounds().reduced(60.0f), 6.0f);
+  //path.addRoundedRectangle(audioProcessor.activeEditor.getBounds().reduced(60.0f), 6.0f);
 }
 
 juce::Rectangle<int> getSliderBounds(juce::Slider& slider)
@@ -112,18 +124,19 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g, float rotaryStartAngle, fl
 
     r.setLeft(center.getX() - 2);
     r.setRight(center.getX() + 2);
-    r.setTop(bounds.getY());
-    r.setBottom(center.getY() - rswl->getTextBoxHeight() * 1.25f);
+    r.setTop(bounds.getY() + 5);
+    r.setBottom(center.getY());// -testSlider.getTextBoxHeight() * 1.25f);
+    r.setSize(10, 10);
 
-    p.addRoundedRectangle(r, 2.0f);
+    p.addEllipse(r);
 
-    jassert(rotaryStartAngle < rotaryEndAngle);
+    float sliderPosProportional = juce::jmap(slider.getValue(), slider.getRange().getStart(), slider.getRange().getEnd(), 0.0, 1.0);
 
-    auto sliderRange = slider.getRange();
 
-    float sliderPosProportional = juce::jmap(slider.getValue(), sliderRange.getStart(), sliderRange.getEnd(), 0.0, 1.0);
 
-    auto sliderAngleRad = juce::jmap(sliderPosProportional, 0.0f, 1.0f, rotaryStartAngle, rotaryEndAngle);
+    jassert(startAngle < endAngle);
+
+    auto sliderAngleRad = juce::jmap(sliderPosProportional, 0.0f, 1.0f, startAngle, endAngle);
 
     p.applyTransform(juce::AffineTransform().rotated(sliderAngleRad, center.getX(), center.getY()));
 
@@ -161,18 +174,19 @@ KnobDesignAudioProcessorEditor::~KnobDesignAudioProcessorEditor()
 //==============================================================================
 void KnobDesignAudioProcessorEditor::paint (juce::Graphics& g)
 {
-  // (Our component is opaque, so we must completely fill the background with a solid colour)
-  g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    // (Our component is opaque, so we must completely fill the background with a solid colour)
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
-  LookAndFeel::drawRotarySlider(g, startAngle, endAngle, testSlider);
+    addAndMakeVisible(testSlider);
+    LookAndFeel::drawRotarySlider(g, startAngle, endAngle, testSlider);
 }
 
 void KnobDesignAudioProcessorEditor::resized()
 {
-  // This is generally where you'll want to lay out the positions of any
-  // subcomponents in your editor..
-  spin.setBounds(getBounds());
-  addAndMakeVisible(spin);
+    // This is generally where you'll want to lay out the positions of any
+    // subcomponents in your editor..
+    spin.setBounds(getBounds());
+    addAndMakeVisible(spin);
 
-  testSlider.setBounds(100, 100, 80, 80);
+    testSlider.setBounds(100, 100, 150, 150);
 }
